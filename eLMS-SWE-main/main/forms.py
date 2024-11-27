@@ -75,6 +75,12 @@ class CourseCreationForm(forms.ModelForm):
         }
 
 
+from django import forms
+from .models import Student
+
+from django import forms
+from .models import Student
+
 class StudentRegistrationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(StudentRegistrationForm, self).__init__(*args, **kwargs)
@@ -92,3 +98,11 @@ class StudentRegistrationForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
             'department': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    # Добавляем проверку уникальности student_id
+    def clean_student_id(self):
+        student_id = self.cleaned_data.get('student_id')
+        if Student.objects.filter(student_id=student_id).exists():
+            raise forms.ValidationError("Этот ID уже занят. Пожалуйста, выберите другой.")
+        return student_id
+

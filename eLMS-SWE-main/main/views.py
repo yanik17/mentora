@@ -784,16 +784,36 @@ def create_course(request):
         departments = Department.objects.all()
         return render(request, 'create_course.html', {'departments': departments})
 
+
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import StudentRegistrationForm
+from .models import Student
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import StudentRegistrationForm
+
 def register_student(request):
-    faculty=request.session['faculty_id']
+    faculty = request.session.get('faculty_id')  # Получаем faculty_id из сессии
     if request.method == 'POST':
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
             student = form.save(commit=False)
             student.password = form.cleaned_data['password']
             student.save()
-            messages.success(request, f'Ученик {student.name} успешно зарегистрирован!')
-            return redirect('register_student')  # URL должен соответствовать вашему маршруту
+            messages.success(request, f'Ученик {student.name} успешно зарегистрирован! Данные для входа: {student.student_id} и пароль, который вы ввели')  # Сообщение об успехе
+            return redirect('register_student')  # Перенаправление на страницу после успешной регистрации
+        else:
+            # Если форма невалидна, передаем ошибки в шаблон
+            messages.error(request, "Ошибка при регистрации. Этот Айди занят.")
     else:
         form = StudentRegistrationForm()
+
     return render(request, 'register_student.html', {'form': form, 'faculty': faculty})
+
+
+
+
+
