@@ -741,13 +741,17 @@ def guestFaculty(request):
 
 
 
+
+from .models import Course, Faculty, Department
+
+
 def create_course(request):
     if request.method == 'POST':
         # Получаем данные из формы
         code = request.POST['code']
         name = request.POST['name']
         department_id = request.POST.get('department', None)  # Получаем ID отдела
-        faculty_name = request.POST['faculty_name']
+        faculty_name = request.POST['faculty_name']  # Имя преподавателя
         student_key = request.POST['student_key']
         faculty_key = request.POST['faculty_key']
 
@@ -757,7 +761,7 @@ def create_course(request):
 
         # Получаем объект Department по ID
         try:
-                department = Department.objects.get(department_id=department_id)
+            department = Department.objects.get(department_id=department_id)
         except Department.DoesNotExist:
             return render(request, 'create_course.html', {'error': 'Отдел не найден.'})
 
@@ -766,13 +770,20 @@ def create_course(request):
             return render(request, 'create_course.html',
                             {'error': f'Курс с ключом преподавателя {faculty_key} уже существует.'})
 
-            # Создаем новый курс
+        # Проверяем, существует ли преподаватель с таким именем
+        faculty, created = Faculty.objects.get_or_create(name=faculty_name)
+        if created:
+            # Если преподаватель был только что создан, можно добавить дополнительные действия
+            print(f"Создан новый преподаватель: {faculty_name}")
+
+        # Создаем новый курс
         course = Course(
             code=code,
             name=name,
             department=department,
             studentKey=student_key,
             facultyKey=faculty_key,
+            faculty=faculty,  # Связываем курс с найденным или новым преподавателем
         )
         course.save()
 
@@ -780,7 +791,7 @@ def create_course(request):
         return redirect('courses')  # Замените на нужный вам URL
 
     else:
-     # Если это GET-запрос, то показываем форму с перечнем отделов
+        # Если это GET-запрос, то показываем форму с перечнем отделов
         departments = Department.objects.all()
         return render(request, 'create_course.html', {'departments': departments})
 
